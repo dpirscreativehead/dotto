@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dotto · the cute QR studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EFE6; --card:#FFFDF8; --ink:#1C1914; --soft:#6E675A;
+    --line:#DCD4C4; --accent:#E4572E; --accent-ink:#B94420;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font:400 15px/1.6 "Space Grotesk",sans-serif;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--accent);color:#fff}
+  .shell{max-width:1180px;margin:0 auto;padding-left:34px;padding-right:34px}
+
+  header{border-bottom:1px solid var(--line)}
+  header .shell{display:flex;align-items:baseline;justify-content:space-between;padding-top:22px;padding-bottom:22px}
+  .brand{font-family:"Fraunces",serif;font-weight:600;font-size:22px;letter-spacing:-.01em}
+  .brand i{font-style:normal;color:var(--accent)}
+  .head-note{font:400 11px "IBM Plex Mono",monospace;color:var(--soft);letter-spacing:.04em}
+
+  main.shell{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:70px;padding-top:56px;padding-bottom:90px;align-items:start}
+  h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(34px,4.2vw,52px);line-height:1.05;letter-spacing:-.015em}
+  h1 em{font-style:italic;font-weight:500;color:var(--accent)}
+  .lede{margin-top:18px;color:var(--soft);max-width:54ch;font-size:15.5px}
+
+  .block{border-top:1px solid var(--line);margin-top:30px;padding-top:22px;padding-bottom:4px}
+  .blk-label{display:flex;align-items:center;gap:12px;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--soft);margin-bottom:20px}
+  .blk-label b{color:var(--accent);font-weight:600}
+
+  /* URL field */
+  .url-box{display:flex;align-items:center;gap:12px;background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:6px 8px 6px 16px;transition:border-color .2s, box-shadow .2s}
+  .url-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(228,87,46,.13)}
+  .url-box svg{flex:none;color:var(--soft)}
+  #url{flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 16px "Space Grotesk",sans-serif;color:var(--ink);padding:10px 0}
+  #url::placeholder{color:#B7AF9F}
+  .err{display:none;margin-top:10px;color:var(--accent-ink);font-size:13px;font-weight:500}
+  .err.show{display:block}
+
+  /* smart toggle */
+  .smart{display:flex;align-items:flex-start;gap:14px;margin-top:20px}
+  .switch{position:relative;flex:none;margin-top:2px;cursor:pointer}
+  .switch input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer;margin:0}
+  .tr{display:block;width:46px;height:26px;border:1.5px solid var(--ink);border-radius:999px;background:var(--card);transition:background .25s,border-color .25s}
+  .kn{display:block;width:17px;height:17px;border-radius:50%;background:var(--ink);margin:3px;transition:transform .3s cubic-bezier(.34,1.6,.64,1),background .25s}
+  .switch input:checked ~ .tr{background:var(--accent);border-color:var(--accent)}
+  .switch input:checked ~ .tr .kn{transform:translateX(20px);background:#fff}
+  .switch input:focus-visible ~ .tr{box-shadow:0 0 0 4px rgba(228,87,46,.2)}
+  .smart-copy b{display:block;font-size:14px;font-weight:600}
+  .smart-copy span{font-size:12.5px;color:var(--soft)}
+
+  /* payload chip */
+  .chip{margin-top:16px;display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:rgba(28,25,20,.045);border:1px solid var(--line);border-radius:14px;padding:11px 14px;cursor:pointer;font-family:"Space Grotesk",sans-serif;transition:border-color .2s}
+  .chip:hover{border-color:var(--ink)}
+  .chip .dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  .chip .cl{flex:none;font-size:12.5px;font-weight:600;color:var(--ink)}
+  .chip .ct{flex:1;min-width:0;font:400 11.5px "IBM Plex Mono",monospace;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip .note{flex:none;font-size:10.5px;font-weight:500;color:var(--accent-ink);border:1px solid currentColor;border-radius:999px;padding:2px 8px}
+  .chip svg{flex:none;color:var(--soft)}
+
+  /* shape controls */
+  .shape-row{display:flex;flex-wrap:wrap;gap:16px 22px;align-items:center}
+  .seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;padding:3px;background:var(--card)}
+  .seg input{position:absolute;opacity:0;pointer-events:none}
+  .seg label{padding:8px 20px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink);transition:background .18s,color .18s}
+  .seg input:checked + label{background:var(--ink);color:var(--paper)}
+  .seg input:focus-visible + label{box-shadow:0 0 0 3px rgba(228,87,46,.35)}
+  .slider{display:flex;align-items:center;gap:12px;flex:1;min-width:210px}
+  .slider label{font-size:12.5px;color:var(--soft);flex:none}
+  .slider output{font:500 11.5px "IBM Plex Mono",monospace;width:46px;text-align:right;flex:none}
+  input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:22px;background:transparent;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line);border-radius:2px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ink);border:3.5px solid var(--card);box-shadow:0 0 0 1.5px var(--ink);margin-top:-8px}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line);border-radius:2px}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--ink);border:3.5px solid var(--card);box-shadow:0 0 0 1.5px var(--ink)}
+
+  /* swatches */
+  .sw-group + .sw-group{margin-top:20px}
+  .sw-title{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);margin-bottom:11px}
+  .sw-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .sw{display:block;width:32px;height:32px;border-radius:50%;border:1px solid rgba(28,25,20,.18);background:var(--c);cursor:pointer;position:relative;transition:transform .15s;padding:0}
+  .sw:hover{transform:scale(1.12)}
+  .sw.active{box-shadow:0 0 0 2.5px var(--paper),0 0 0 4.5px var(--ink)}
+  .sw.transparent{background:conic-gradient(#E7DFCE 25%,#fff 0 50%,#E7DFCE 0 75%,#fff 0) 0 0/10px 10px}
+  .sw.custom{border:1.5px dashed var(--ink)}
+  .sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+  /* stage */
+  .stage{position:sticky;top:30px}
+  .stage-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .stage-head > span:first-child{font:500 10.5px "IBM Plex Mono",monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--soft)}
+  .live{display:inline-flex;align-items:center;gap:7px;font:500 10.5px "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink)}
+  .live i{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .specimen{position:relative;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:24px;transform:rotate(-.6deg);transition:transform .4s cubic-bezier(.22,1,.36,1)}
+  .specimen:hover{transform:rotate(0deg)}
+  .cm{position:absolute;width:15px;height:15px;pointer-events:none}
+  .cm.tl{top:-21px;left:-21px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink)}
+  .cm.tr{top:-21px;right:-21px;border-left:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink)}
+  .cm.bl{bottom:-21px;left:-21px;border-right:1.5px solid var(--ink);border-top:1.5px solid var(--ink)}
+  .cm.br{bottom:-21px;right:-21px;border-left:1.5px solid var(--ink);border-top:1.5px solid var(--ink)}
+  .qr-wrap{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+  .qr-wrap.tcheck{background:conic-gradient(#EBE3D2 25%,#fff 0 50%,#EBE3D2 0 75%,#fff 0) 0 0/18px 18px}
+  #qrCanvas{display:block;width:100%;height:auto;border-radius:6px}
+  .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px 16px;font:400 11px "IBM Plex Mono",monospace;color:var(--soft)}
+  .warn{display:none;margin-top:10px;font-size:12.5px;font-weight:500;color:var(--accent-ink);align-items:center;gap:8px}
+  .warn.show{display:flex}
+  .warn svg{flex:none}
+
+  .exports{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:11px 20px;border-radius:999px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font:500 13.5px "Space Grotesk",sans-serif;cursor:pointer;transition:background .18s,color .18s,border-color .18s,transform .12s}
+  .btn:hover{background:var(--ink);color:var(--paper)}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--ink);color:var(--paper)}
+  .btn.primary:hover{background:var(--accent);border-color:var(--accent)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn:disabled{opacity:.35;pointer-events:none}
+  .btn svg{width:15px;height:15px}
+  .hint{margin-top:14px;font-size:12px;color:var(--soft);line-height:1.55}
+
+  footer{border-top:1px solid var(--line)}
+  footer .shell{padding-top:18px;padding-bottom:26px;font:400 11px "IBM Plex Mono",monospace;color:var(--soft);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:999px;font:500 13px "Space Grotesk",sans-serif;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.18);max-width:88vw}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media(max-width:920px){
+    main.shell{grid-template-columns:1fr;gap:54px;padding-top:40px}
+    .stage{position:static}
+    header .shell{flex-direction:column;gap:4px;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shell">
+    <div class="brand">dotto<i>.</i></div>
+    <div class="head-note">runs 100% in your browser — nothing is uploaded</div>
+  </div>
+</header>
+
+<main class="shell">
+  <section>
+    <h1>Make a QR code people <em>actually want</em> to scan.</h1>
+    <p class="lede">Paste any link and dotto draws it in soft, rounded modules. Scans open the native app when it's installed — Instagram, WhatsApp, YouTube, Telegram and more — and fall back to the browser when it isn't. Export print-ready PNG, JPG or PDF.</p>
+
+    <div class="block">
+      <div class="blk-label"><b>01</b><span>destination</span></div>
+      <div class="url-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <input id="url" type="text" value="instagram.com/natgeo" placeholder="instagram.com/you · youtube.com/watch?v=… · wa.me/15551234567" spellcheck="false" autocomplete="off" aria-label="Link to encode">
+      </div>
+      <p class="err" id="err"></p>
+
+      <div class="smart">
+        <label class="switch">
+          <input type="checkbox" id="smart" checked>
+          <span class="tr"><span class="kn"></span></span>
+        </label>
+        <div class="smart-copy">
+          <b>Smart app links</b>
+          <span>Encodes a clean https link, which the phone already knows how to route: straight into the native app when it's installed (Instagram, WhatsApp, YouTube, X, Telegram, Spotify…) and into the browser when it isn't. Raw app schemes like instagram:// are deliberately never encoded — scanners web-search those when the app is missing.</span>
+        </div>
+      </div>
+
+      <button class="chip" id="chip" type="button" title="Click to copy the exact encoded payload">
+        <span class="dot"></span>
+        <span class="cl" id="chipLabel">—</span>
+        <span class="ct" id="chipText">—</span>
+        <span class="note" id="chipNote" style="display:none"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+    </div>
+
+    <div class="block">
+      <div class="blk-label"><b>02</b><span>shape</span></div>
+      <div class="shape-row">
+        <div class="seg" role="group" aria-label="Module style">
+          <input type="radio" name="style" id="stSmooth" value="smooth" checked><label for="stSmooth">Smooth</label>
+          <input type="radio" name="style" id="stDots" value="dots"><label for="stDots">Dots</label>
+        </div>
+        <div class="slider">
+          <label for="round">Roundness</label>
+          <input type="range" id="round" min="10" max="100" value="85">
+          <output id="roundVal">85%</output>
+        </div>
+        <div class="slider">
+          <label for="quiet">Quiet zone</label>
+          <input type="range" id="quiet" min="0" max="6" value="3">
+          <output id="quietVal">3</output>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="blk-label"><b>03</b><span>ink &amp; paper</span></div>
+      <div class="sw-group">
+        <div class="sw-title">Code color</div>
+        <div class="sw-row" id="inkRow">
+          <button class="sw active" data-c="#1C1914" style="--c:#1C1914" aria-label="Ink black" title="Ink black"></button>
+          <button class="sw" data-c="#1F4A38" style="--c:#1F4A38" aria-label="Deep forest" title="Deep forest"></button>
+          <button class="sw" data-c="#1F3A5F" style="--c:#1F3A5F" aria-label="Midnight navy" title="Midnight navy"></button>
+          <button class="sw" data-c="#5C2E46" style="--c:#5C2E46" aria-label="Plum" title="Plum"></button>
+          <button class="sw" data-c="#A6432A" style="--c:#A6432A" aria-label="Terracotta" title="Terracotta"></button>
+          <label class="sw custom" id="inkCustom" title="Custom color" style="background:#1C1914"><input type="color" id="inkPicker" value="#1C1914" aria-label="Custom code color"></label>
+        </div>
+      </div>
+      <div class="sw-group">
+        <div class="sw-title">Background</div>
+        <div class="sw-row" id="bgRow">
+          <button class="sw transparent active" aria-label="Transparent" title="Transparent (kept in PNG &amp; PDF)"></button>
+          <button class="sw" data-c="#FFFFFF" style="--c:#FFFFFF" aria-label="White" title="White"></button>
+          <button class="sw" data-c="#F4EFE6" style="--c:#F4EFE6" aria-label="Warm paper" title="Warm paper"></button>
+          <button class="sw" data-c="#F6E3CE" style="--c:#F6E3CE" aria-label="Peach cream" title="Peach cream"></button>
+          <button class="sw" data-c="#DFE8DA" style="--c:#DFE8DA" aria-label="Sage" title="Sage"></button>
+          <button class="sw" data-c="#F3DBD6" style="--c:#F3DBD6" aria-label="Blush" title="Blush"></button>
+          <label class="sw custom" id="bgCustom" title="Custom background" style="background:#FFFFFF"><input type="color" id="bgPicker" value="#FFFFFF" aria-label="Custom background color"></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="stage">
+    <div class="stage-head">
+      <span>Specimen · A/1</span>
+      <span class="live"><i></i>live preview</span>
+    </div>
+    <div class="specimen">
+      <span class="cm tl"></span><span class="cm tr"></span><span class="cm bl"></span><span class="cm br"></span>
+      <div class="qr-wrap tcheck" id="qrWrap">
+        <canvas id="qrCanvas" width="640" height="640"></canvas>
+      </div>
+      <div class="meta" id="meta"><span>awaiting a link…</span></div>
+      <div class="warn" id="warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Low contrast between code and background — scanners may struggle.</span>
+      </div>
+    </div>
+    <div class="exports">
+      <button class="btn primary" id="dlPng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PNG</button>
+      <button class="btn" id="dlJpg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>JPG</button>
+      <button class="btn" id="dlPdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+    </div>
+    <p class="hint">PNG &amp; JPG export at 2048 × 2048 px; PDF lands on a clean A4 sheet with the payload captioned underneath. Transparent backgrounds are kept in PNG &amp; PDF; JPG is flattened onto white. Printed codes stay reliable from about 2 cm wide.</p>
+  </aside>
+</main>
+
+<footer>
+  <div class="shell">
+    <span>dotto — no uploads · no tracking · no expiry</span>
+    <span>error-correction level H · always test-scan before printing</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ---------- tiny helpers ---------- */
+var $ = function(s){ return document.querySelector(s); };
+var clamp = function(v,a,b){ return Math.min(b, Math.max(a, v)); };
+var easeInOut = function(t){ return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; };
+var safeDecode = function(s){ try{ return decodeURIComponent(s); }catch(e){ return s; } };
+
+/* ---------- elements ---------- */
+var urlInput=$('#url'), errEl=$('#err'), smartEl=$('#smart'),
+    chip=$('#chip'), chipLabel=$('#chipLabel'), chipText=$('#chipText'), chipNote=$('#chipNote'),
+    qrWrap=$('#qrWrap'), cv=$('#qrCanvas'), metaEl=$('#meta'), warnEl=$('#warn'),
+    roundEl=$('#round'), roundVal=$('#roundVal'), quietEl=$('#quiet'), quietVal=$('#quietVal'),
+    toastEl=$('#toast');
+
+/* ---------- state ---------- */
+var state = {
+  ink:'#1C1914', bg:null, style:'smooth', round:0.85, margin:3,
+  smart:true, url:null, payload:'', label:'', note:'', qr:null
+};
+var lastPayload = null, raf = 0, toastTimer = 0, debounceTimer = 0;
+
+/* ---------- QR engine (UTF-8 safe) ---------- */
+if (window.qrcode && qrcode.stringToBytesFuncs && qrcode.stringToBytesFuncs['UTF-8']) {
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+}
+function makeQR(text){
+  if (typeof qrcode !== 'function') throw new Error('QR engine not loaded — check your connection and refresh.');
+  var qr = qrcode(0, 'H');
+  qr.addData(text);
+  qr.make();
+  return qr;
+}
+
+/* ---------- path helper with per-corner radii ---------- */
+function rpath(ctx, x, y, w, h, r){
+  var a = (typeof r === 'number') ? [r,r,r,r] : r;
+  var tl=a[0], tr=a[1], br=a[2], bl=a[3];
+  ctx.beginPath();
+  ctx.moveTo(x+tl, y);
+  ctx.lineTo(x+w-tr, y); if(tr) ctx.arcTo(x+w, y, x+w, y+tr, tr);
+  ctx.lineTo(x+w, y+h-br); if(br) ctx.arcTo(x+w, y+h, x+w-br, y+h, br);
+  ctx.lineTo(x+bl, y+h); if(bl) ctx.arcTo(x, y+h, x, y+h-bl, bl);
+  ctx.lineTo(x, y+tl); if(tl) ctx.arcTo(x, y, x+tl, y, tl);
+  ctx.closePath();
+}
+
+/* ---------- URL parsing ---------- */
+function normalizeInput(raw){
+  var s = (raw || '').trim();
+  if (!s) return {};
+  if (!/^[a-z][a-z0-9+.\-]*:/i.test(s)) {
+    if (/^[\w\-]+(\.[\w\-]+)+([\/?#].*)?$/.test(s)) s = 'https://' + s;
+    else return { error: 'That doesn’t look like a link — try something like instagram.com/you.' };
+  }
+  var u;
+  try { u = new URL(s); } catch(e) { return { error: 'That doesn’t look like a link — try something like instagram.com/you.' }; }
+  if (!/^(https?|mailto|tel):$/i.test(u.protocol)) return { error: 'Only http, https, mailto and tel links are supported.' };
+  return { url: u };
+}
+
+/* ---------- smart link cleanup (scanner-safe universal links) ----------
+   Raw app schemes (instagram://…) break when the app is missing — scanners
+   treat them as text and run a web search. Clean https links are routed by
+   the OS itself: native app when installed, browser when not. So instead of
+   rewriting to schemes, we canonicalize + de-track the https URL.          */
+var APPNOTE = 'app if installed · browser otherwise';
+var TRACK_KEYS = { fbclid:1, gclid:1, gclsrc:1, dclid:1, msclkid:1, yclid:1, ttclid:1,
+                   igshid:1, igsh:1, si:1, ref:1, ref_src:1, ref_url:1,
+                   mkt_tok:1, mc_cid:1, mc_eid:1, _hsenc:1, _hsmi:1 };
+function isTracking(k){ k = String(k).toLowerCase(); return TRACK_KEYS[k] === 1 || k.indexOf('utm_') === 0; }
+
+var HOST_CANON = {
+  'm.facebook.com':'facebook.com', 'web.facebook.com':'facebook.com', 'fb.com':'facebook.com',
+  'm.instagram.com':'instagram.com',
+  'mobile.twitter.com':'x.com', 'm.twitter.com':'x.com', 'twitter.com':'x.com',
+  'm.youtube.com':'youtube.com',
+  'm.tiktok.com':'tiktok.com',
+  'spotify.com':'open.spotify.com',
+  'telegram.me':'t.me'
+};
+var WWW_HOSTS = { 'instagram.com':1, 'facebook.com':1, 'youtube.com':1, 'tiktok.com':1,
+                  'snapchat.com':1, 'pinterest.com':1, 'linkedin.com':1, 'threads.net':1, 'reddit.com':1 };
+var APP_LABELS = {
+  'instagram.com':'Instagram', 'facebook.com':'Facebook', 'fb.watch':'Facebook',
+  'x.com':'X · Twitter', 'youtu.be':'YouTube', 'youtube.com':'YouTube',
+  'wa.me':'WhatsApp', 't.me':'Telegram', 'open.spotify.com':'Spotify',
+  'snapchat.com':'Snapchat', 'pinterest.com':'Pinterest', 'm.me':'Messenger',
+  'tiktok.com':'TikTok', 'linkedin.com':'LinkedIn', 'threads.net':'Threads'
+};
+
+function cleanLink(u){
+  if (u.protocol === 'mailto:') return { label:'Email', payload:u.href, note:'opens the mail app' };
+  if (u.protocol === 'tel:')    return { label:'Phone', payload:u.href, note:'opens the dialer' };
+
+  var h = u.hostname.toLowerCase();
+  var seg = u.pathname.split('/').filter(Boolean);
+
+  /* WhatsApp API links -> wa.me (universal link that opens the chat directly) */
+  if (h === 'api.whatsapp.com' && seg[0] === 'send') {
+    var ph = (u.searchParams.get('phone') || '').replace(/\D/g, '');
+    if (ph) {
+      var wp = 'https://wa.me/' + ph;
+      var tx = u.searchParams.get('text');
+      if (tx) wp += '?text=' + encodeURIComponent(tx);
+      return { label:'WhatsApp', payload:wp, note:APPNOTE };
+    }
+  }
+
+  /* canonical host: m./mobile./web. folded onto the real domain */
+  h = (HOST_CANON[h] || h).replace(/^www\./, '');
+  var host = WWW_HOSTS[h] ? 'www.' + h : h;
+
+  /* strip tracking parameters — shorter code, cleaner scan */
+  var sp = new URLSearchParams(u.search);
+  Array.from(sp.keys()).forEach(function(k){ if (isTracking(k)) sp.delete(k); });
+  var qs = sp.toString();
+
+  var payload = 'https://' + host + u.pathname + (qs ? '?' + qs : '') + (u.hash || '');
+  var label = APP_LABELS[h] || 'Web link';
+  return { label:label, payload:payload, note: label === 'Web link' ? '' : APPNOTE };
+}
+
+/* ---------- renderer ---------- */
+function drawQROn(canvas, qr, o, progress){
+  var n = qr.getModuleCount(), px = o.px, m = o.margin;
+  canvas.width = px; canvas.height = px;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, px, px);
+
+  var cell = px / (n + 2*m);
+  function X(c){ return (c+m)*cell; }
+  function Y(r){ return (r+m)*cell; }
+  function isDark(r,c){ return r>=0 && c>=0 && r<n && c<n && qr.isDark(r,c); }
+  function inFinder(r,c){ return (r<7&&c<7) || (r<7&&c>=n-7) || (r>=n-7&&c<7); }
+
+  ctx.save();
+  var cut = easeInOut(clamp(progress, 0, 1));
+  ctx.beginPath(); ctx.rect(0, 0, px, px*cut + 0.5); ctx.clip();
+
+  if (o.bg) { ctx.fillStyle = o.bg; ctx.fillRect(0, 0, px, px); }
+  ctx.fillStyle = o.color; ctx.strokeStyle = o.color; ctx.lineCap = 'round';
+
+  var r, c;
+  if (o.style === 'dots') {
+    var rad = cell * (0.28 + 0.22 * o.round);
+    ctx.lineWidth = Math.max(1, rad * 1.1);
+    for (r=0; r<n; r++) for (c=0; c<n; c++) {
+      if (!isDark(r,c) || inFinder(r,c)) continue;
+      var cx = X(c)+cell/2, cy = Y(r)+cell/2;
+      if (isDark(r,c+1) && !inFinder(r,c+1)) { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+cell,cy); ctx.stroke(); }
+      if (isDark(r+1,c) && !inFinder(r+1,c)) { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx,cy+cell); ctx.stroke(); }
+      ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI*2); ctx.fill();
+    }
+  } else {
+    var R = cell * 0.5 * o.round, ov = 0.5;
+    for (r=0; r<n; r++) for (c=0; c<n; c++) {
+      if (!isDark(r,c) || inFinder(r,c)) continue;
+      var up = isDark(r-1,c) && !inFinder(r-1,c),
+          dn = isDark(r+1,c) && !inFinder(r+1,c),
+          lf = isDark(r,c-1) && !inFinder(r,c-1),
+          rt = isDark(r,c+1) && !inFinder(r,c+1);
+      var x = X(c) - (lf?ov:0), y = Y(r) - (up?ov:0),
+          w = cell + (lf?ov:0) + (rt?ov:0), h = cell + (up?ov:0) + (dn?ov:0);
+      rpath(ctx, x, y, w, h, [ (up||lf)?0:R, (up||rt)?0:R, (dn||rt)?0:R, (dn||lf)?0:R ]);
+      ctx.fill();
+    }
+  }
+
+  /* custom rounded finder patterns */
+  var finders = [[0,0],[0,n-7],[n-7,0]];
+  for (var i=0; i<3; i++) {
+    var fr = finders[i][0], fc = finders[i][1];
+    var x0 = X(fc), y0 = Y(fr), S = 7*cell;
+    if (o.style === 'dots') {
+      ctx.lineWidth = Math.max(1.5, cell*0.92);
+      var rm = cell * (0.5 + 2.1*o.round);
+      rpath(ctx, x0+cell*0.5, y0+cell*0.5, 6*cell, 6*cell, rm);
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(x0+3.5*cell, y0+3.5*cell, cell*1.12, 0, Math.PI*2); ctx.fill();
+    } else {
+      var ro = cell * (0.7 + 1.8*o.round), ri = Math.max(0, ro - cell);
+      rpath(ctx, x0, y0, S, S, ro); ctx.fill();
+      if (o.bg) {
+        ctx.fillStyle = o.bg;
+        rpath(ctx, x0+cell, y0+cell, 5*cell, 5*cell, ri); ctx.fill();
+        ctx.fillStyle = o.color;
+      } else {
+        ctx.globalCompositeOperation = 'destination-out';
+        rpath(ctx, x0+cell, y0+cell, 5*cell, 5*cell, ri); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.beginPath(); ctx.arc(x0+3.5*cell, y0+3.5*cell, cell*(1.0 + 0.5*o.round), 0, Math.PI*2); ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  /* sweep line during the reveal animation */
+  if (progress < 1) {
+    var yl = px * easeInOut(clamp(progress, 0, 1));
+    ctx.fillStyle = '#E4572E';
+    ctx.fillRect(0, Math.max(0, yl - px*0.004), px, Math.max(2, px*0.0035));
+  }
+}
+
+function drawPlaceholder(){
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  var w = cv.clientWidth || 360, px = Math.round(w*dpr);
+  cv.width = px; cv.height = px;
+  var ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, px, px);
+  ctx.strokeStyle = 'rgba(28,25,20,.3)';
+  ctx.lineWidth = Math.max(1.2, 1.2*dpr);
+  ctx.setLineDash([5*dpr, 7*dpr]);
+  rpath(ctx, px*.22, px*.22, px*.56, px*.56, px*.08);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(28,25,20,.42)';
+  ctx.font = '500 ' + Math.round(12.5*dpr) + 'px "Space Grotesk", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('your code will appear here', px/2, px/2);
+}
+
+function paint(progress){
+  qrWrap.classList.toggle('tcheck', !state.bg);
+  if (!state.qr) { drawPlaceholder(); return; }
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  var w = cv.clientWidth || 360;
+  drawQROn(cv, state.qr, { color:state.ink, bg:state.bg, style:state.style, round:state.round, margin:state.margin, px: Math.round(w*dpr) }, progress === undefined ? 1 : progress);
+}
+
+function animate(){
+  cancelAnimationFrame(raf);
+  var t0 = performance.now(), dur = 640;
+  function step(now){
+    var t = clamp((now - t0) / dur, 0, 1);
+    paint(t);
+    if (t < 1) raf = requestAnimationFrame(step);
+  }
+  raf = requestAnimationFrame(step);
+}
+
+/* ---------- contrast check ---------- */
+function hexRGB(hex){
+  var h = hex.replace('#','');
+  if (h.length === 3) h = h.split('').map(function(c){ return c+c; }).join('');
+  return [0,2,4].map(function(i){ return parseInt(h.slice(i, i+2), 16) / 255; });
+}
+function lum(hex){
+  var c = hexRGB(hex).map(function(v){ return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); });
+  return 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
+}
+function contrast(a, b){
+  var l1 = lum(a), l2 = lum(b);
+  return (Math.max(l1,l2) + 0.05) / (Math.min(l1,l2) + 0.05);
+}
+
+/* ---------- update pipeline ---------- */
+function update(animateWanted){
+  var res = normalizeInput(urlInput.value);
+  var message = res.error || '';
+  state.url = res.url || null;
+  state.qr = null;
+
+  if (state.url) {
+    var dl = state.smart ? cleanLink(state.url) : { label:'Web link', payload:state.url.href, note:'' };
+    state.label = dl.label; state.payload = dl.payload; state.note = dl.note || '';
+    try { state.qr = makeQR(state.payload); }
+    catch(e) { message = /too long|overflow|big/i.test(e.message) ? 'This link is too long to fit in a single QR code.' : e.message; }
+  } else {
+    state.payload = ''; state.label = ''; state.note = '';
+  }
+
+  errEl.textContent = message;
+  errEl.classList.toggle('show', !!message);
+
+  if (state.payload) {
+    chip.style.display = 'flex';
+    chipLabel.textContent = state.label;
+    chipText.textContent = state.payload;
+    chipNote.style.display = state.note ? '' : 'none';
+    chipNote.textContent = state.note;
+  } else {
+    chip.style.display = 'none';
+  }
+
+  var changed = state.payload !== lastPayload;
+  lastPayload = state.payload;
+
+  var btns = [$('#dlPng'), $('#dlJpg'), $('#dlPdf')];
+  if (state.qr) {
+    var n = state.qr.getModuleCount();
+    metaEl.innerHTML = '';
+    [n + ' × ' + n + ' modules', 'error correction H', state.payload.length + ' chars encoded', 'quiet zone ' + state.margin]
+      .forEach(function(t){ var s = document.createElement('span'); s.textContent = t; metaEl.appendChild(s); });
+    warnEl.classList.toggle('show', contrast(state.ink, state.bg || '#FFFFFF') < 3);
+    btns.forEach(function(b){ b.disabled = false; });
+    if (animateWanted && changed) animate(); else paint(1);
+  } else {
+    metaEl.innerHTML = '<span>awaiting a link…</span>';
+    warnEl.classList.remove('show');
+    btns.forEach(function(b){ b.disabled = true; });
+    paint(1);
+  }
+}
+
+/* ---------- toast & clipboard ---------- */
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2600);
+}
+function copyText(t){
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+  return new Promise(function(res, rej){
+    var ta = document.createElement('textarea');
+    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy') ? res() : rej(); } catch(e){ rej(e); }
+    document.body.removeChild(ta);
+  });
+}
+chip.addEventListener('click', function(){
+  if (!state.payload) return;
+  copyText(state.payload)
+    .then(function(){ toast('Encoded payload copied to clipboard'); })
+    .catch(function(){ toast('Couldn’t copy — your browser blocked it'); });
+});
+
+/* ---------- exports ---------- */
+function fileBase(){
+  var host = ((state.url && state.url.hostname) || 'link').replace(/^www\./,'').replace(/[^\w.\-]/g,'');
+  return 'qr-' + (host || 'link');
+}
+function optsFor(px, bgOverride){
+  return { color:state.ink, bg:(bgOverride !== undefined ? bgOverride : state.bg), style:state.style, round:state.round, margin:state.margin, px:px };
+}
+function saveBlob(blob, name){
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+}
+function exportRaster(fmt){
+  if (!state.qr) { toast('Add a valid link first'); return; }
+  try {
+    var px = 2048;
+    var qr = makeQR(state.payload);
+    var c = document.createElement('canvas');
+    drawQROn(c, qr, optsFor(px, fmt === 'jpg' ? (state.bg || '#FFFFFF') : state.bg), 1);
+    var name = fileBase() + '.' + fmt;
+    var mime = fmt === 'png' ? 'image/png' : 'image/jpeg';
+    var done = function(blob){
+      if (!blob) { toast('Export failed — please try again'); return; }
+      saveBlob(blob, name);
+      toast(fmt.toUpperCase() + ' saved · ' + px + ' × ' + px + ' px');
+    };
+    if (c.toBlob) c.toBlob(done, mime, 0.93);
+    else {
+      var d = c.toDataURL(mime, 0.93), bin = atob(d.split(',')[1]), arr = new Uint8Array(bin.length);
+      for (var i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
+      done(new Blob([arr], { type: mime }));
+    }
+  } catch(e) { toast('Export failed: ' + e.message); }
+}
+function exportPDF(){
+  if (!state.qr) { toast('Add a valid link first'); return; }
+  try {
+    if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('jsPDF missing');
+    var jsPDF = window.jspdf.jsPDF;
+    var qr = makeQR(state.payload);
+    var c = document.createElement('canvas');
+    drawQROn(c, qr, optsFor(1600, state.bg || '#FFFFFF'), 1);
+    var pdf = new jsPDF({ unit:'pt', format:'a4' });
+    var W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
+    var s = 430;
+    pdf.addImage(c.toDataURL('image/png'), 'PNG', (W-s)/2, (H-s)/2 - 14, s, s);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9); pdf.setTextColor(125);
+    var cap = state.payload.length > 260 ? state.payload.slice(0, 260) + ' …' : state.payload;
+    var lines = pdf.splitTextToSize(cap, W - 140);
+    pdf.text(lines, W/2, (H+s)/2 + 20, { align:'center' });
+    pdf.save(fileBase() + '.pdf');
+    toast('PDF saved · A4 portrait');
+  } catch(e) { toast('PDF export failed — is the jsPDF CDN reachable?'); }
+}
+ $('#dlPng').addEventListener('click', function(){ exportRaster('png'); });
+ $('#dlJpg').addEventListener('click', function(){ exportRaster('jpg'); });
+ $('#dlPdf').addEventListener('click', exportPDF);
+
+/* ---------- controls wiring ---------- */
+urlInput.addEventListener('input', function(){
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(function(){ update(true); }, 240);
+});
+urlInput.addEventListener('keydown', function(e){
+  if (e.key === 'Enter') { clearTimeout(debounceTimer); update(true); }
+});
+smartEl.addEventListener('change', function(){ state.smart = smartEl.checked; update(true); });
+ $('#stSmooth').addEventListener('change', function(){ state.style = 'smooth'; paint(1); });
+ $('#stDots').addEventListener('change', function(){ state.style = 'dots'; paint(1); });
+roundEl.addEventListener('input', function(){
+  state.round = roundEl.value / 100;
+  roundVal.textContent = roundEl.value + '%';
+  paint(1);
+});
+quietEl.addEventListener('input', function(){
+  state.margin = +quietEl.value;
+  quietVal.textContent = quietEl.value;
+  paint(1);
+});
+
+function wireSwatches(rowSel, customLabel, picker, onPick){
+  var row = $(rowSel);
+  row.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button.sw') : null;
+    if (!b) return;
+    var all = row.querySelectorAll('.sw');
+    for (var i=0; i<all.length; i++) all[i].classList.remove('active');
+    b.classList.add('active');
+    onPick(b.hasAttribute('data-c') ? b.getAttribute('data-c') : null);
+  });
+  picker.addEventListener('input', function(){
+    var all = row.querySelectorAll('.sw');
+    for (var i=0; i<all.length; i++) all[i].classList.remove('active');
+    customLabel.classList.add('active');
+    customLabel.style.background = picker.value;
+    onPick(picker.value);
+  });
+}
+wireSwatches('#inkRow', $('#inkCustom'), $('#inkPicker'), function(c){ state.ink = c; update(false); });
+wireSwatches('#bgRow',  $('#bgCustom'),  $('#bgPicker'),  function(c){ state.bg  = c; update(false); });
+
+/* ---------- responsive repaint ---------- */
+if (window.ResizeObserver) new ResizeObserver(function(){ paint(1); }).observe(qrWrap);
+else window.addEventListener('resize', function(){ paint(1); });
+
+/* ---------- go ---------- */
+update(true);
+})();
+</script>
+</body>
+</html>
